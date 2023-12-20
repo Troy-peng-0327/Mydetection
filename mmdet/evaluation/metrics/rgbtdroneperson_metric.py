@@ -13,7 +13,7 @@ from mmengine.fileio import dump, get_local_path, load
 from mmengine.logging import MMLogger
 from terminaltables import AsciiTable
 
-from mmdet.datasets.api_wrappers import COCO, COCOeval, COCOevalMP
+from mmdet.datasets.api_wrappers import COCO, COCOeval, COCOevalMP, COCOevalTiny, Params
 from mmdet.registry import METRICS
 from mmdet.structures.mask import encode_mask_results
 from ..functional import eval_recalls
@@ -151,10 +151,14 @@ class RGBTDronePersonMetric(CocoMetric):
                     'The testing results of the whole dataset is empty.')
                 break
 
+            Params.EVAL_STRANDARD = self.eval_standard
             if self.use_mp_eval:
                 coco_eval = COCOevalMP(self._coco_api, coco_dt, iou_type)
             else:
-                coco_eval = COCOeval(self._coco_api, coco_dt, iou_type)
+                if self.eval_standard == 'tiny':
+                    coco_eval = COCOevalTiny(self._coco_api, coco_dt, iou_type, ignore_uncertain=True, use_iod_for_ignore=True)
+                else:
+                    coco_eval = COCOeval(self._coco_api, coco_dt, iou_type)
 
             coco_eval.params.catIds = self.cat_ids
             coco_eval.params.imgIds = self.img_ids
@@ -162,20 +166,46 @@ class RGBTDronePersonMetric(CocoMetric):
             coco_eval.params.iouThrs = self.iou_thrs
 
             # mapping of cocoEval.stats
-            coco_metric_names = {
-                'mAP': 0,
-                'mAP_50': 1,
-                'mAP_75': 2,
-                'mAP_s': 3,
-                'mAP_m': 4,
-                'mAP_l': 5,
-                'AR@100': 6,
-                'AR@300': 7,
-                'AR@1000': 8,
-                'AR_s@1000': 9,
-                'AR_m@1000': 10,
-                'AR_l@1000': 11
-            }
+            if self.eval_standard == 'coco':
+                coco_metric_names = {
+                    'mAP': 0,
+                    'mAP_50': 1,
+                    'mAP_75': 2,
+                    'mAP_s': 3,
+                    'mAP_m': 4,
+                    'mAP_l': 5,
+                    'AR@100': 6,
+                    'AR@300': 7,
+                    'AR@1000': 8,
+                    'AR_s@1000': 9,
+                    'AR_m@1000': 10,
+                    'AR_l@1000': 11
+                }
+            if self.eval_standard == 'tiny':
+                coco_metric_names = {
+                    'mAP_25': 0,
+                    'mAP_25_tiny': 1,
+                    'mAP_25_tiny1': 2,
+                    'mAP_25_tiny2': 3,
+                    'mAP_25_tiny3': 4,
+                    'mAP_25_small': 5,
+                    'mAP_25_reasonable': 6,
+                    'mAP_50': 7,
+                    'mAP_50_tiny': 8,
+                    'mAP_50_tiny1': 9,
+                    'mAP_50_tiny2': 10,
+                    'mAP_50_tiny3': 11,
+                    'mAP_50_small': 12,
+                    'mAP_50_reasonable': 13,
+                    'mAP_75': 14,
+                    'mAP_75_tiny': 15,
+                    'mAP_75_tiny1': 16,
+                    'mAP_75_tiny2': 17,
+                    'mAP_75_tiny3': 18,
+                    'mAP_75_small': 19,
+                    'mAP_75_reasonable': 20,                    
+                }
+
             metric_items = self.metric_items
             if metric_items is not None:
                 for metric_item in metric_items:
@@ -215,7 +245,10 @@ class RGBTDronePersonMetric(CocoMetric):
                         # area range index 0: all area ranges
                         # max dets index -1: typically 100 per image
                         nm = self._coco_api.loadCats(cat_id)[0]
-                        precision = precisions[:, :, idx, 0, -1]
+                        # AP25
+                        precision = precisions[0, :, idx, 0, -1]
+                        # AP
+                        # precision = precisions[:, :, idx, 0, -1]
                         precision = precision[precision > -1]
                         if precision.size:
                             ap = np.mean(precision)
@@ -249,10 +282,11 @@ class RGBTDronePersonMetric(CocoMetric):
                     num_columns = len(results_per_category[0])
                     results_flatten = list(
                         itertools.chain(*results_per_category))
-                    headers = [
-                        'category', 'mAP', 'mAP_50', 'mAP_75', 'mAP_s',
-                        'mAP_m', 'mAP_l'
-                    ]
+                    # headers = [
+                    #     'category', 'mAP', 'mAP_50', 'mAP_75', 'mAP_s',
+                    #     'mAP_m', 'mAP_l'
+                    # ]
+                    headers = ['category', 'AP25'] * (num_columns // 2)
                     results_2d = itertools.zip_longest(*[
                         results_flatten[i::num_columns]
                         for i in range(num_columns)
@@ -263,8 +297,11 @@ class RGBTDronePersonMetric(CocoMetric):
                     logger.info('\n' + table.table)
 
                 if metric_items is None:
+                    # metric_items = [
+                    #     'mAP', 'mAP_50', 'mAP_75', 'mAP_s', 'mAP_m', 'mAP_l'
+                    # ]
                     metric_items = [
-                        'mAP', 'mAP_50', 'mAP_75', 'mAP_s', 'mAP_m', 'mAP_l'
+                        'mAP_75', 'mAP_25', 'mAP_50', 'mAP_50_tiny', 'mAP_50_tiny1', 'mAP_50_tiny2', 'mAP_50_tiny3', 'mAP_50_small',
                     ]
 
                 for metric_item in metric_items:
@@ -272,10 +309,12 @@ class RGBTDronePersonMetric(CocoMetric):
                     val = coco_eval.stats[coco_metric_names[metric_item]]
                     eval_results[key] = float(f'{round(val, 3)}')
 
-                ap = coco_eval.stats[:6]
+                # ap = coco_eval.stats[:6]
+                ap = coco_eval.stats[:8]    
                 logger.info(f'{metric}_mAP_copypaste: {ap[0]:.3f} '
                             f'{ap[1]:.3f} {ap[2]:.3f} {ap[3]:.3f} '
-                            f'{ap[4]:.3f} {ap[5]:.3f}')
+                            f'{ap[4]:.3f} {ap[5]:.3f} {ap[6]:.3f} '
+                            f'{ap[7]:.3f}')
 
         if tmp_dir is not None:
             tmp_dir.cleanup()

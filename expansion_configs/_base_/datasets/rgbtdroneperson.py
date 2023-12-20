@@ -1,6 +1,6 @@
 # dataset settings
 dataset_type = 'RGBTDronePersonDataset'
-data_root = '/Users/pengpeiran/Desktop/PhD_documents/05代码/Datasets/RGBTDronePerson/'
+data_root = '../../Datasets/RGBTDronePerson/'
 
 backend_args = None
 
