@@ -541,7 +541,7 @@ class COCOevalTiny:
                 # 如果指定了 IoU 阈值，则选择相应的数据
                 if iouThr is not None:
                     # t = np.where(iouThr == p.iouThrs)[0]
-                    t = np.where(float_equal(iouThr == p.iouThrs))[0]
+                    t = np.where(float_equal(iouThr, p.iouThrs))[0]
                     s = s[t]
                 s = s[:,:,:,aind,mind]
             else:
@@ -549,7 +549,7 @@ class COCOevalTiny:
                 s = self.eval['recall']
                 if iouThr is not None:
                     # t = np.where(iouThr == p.iouThrs)[0]
-                    t = np.where(float_equal(iouThr == p.iouThrs))[0]
+                    t = np.where(float_equal(iouThr, p.iouThrs))[0]
                     s = s[t]
                 s = s[:,:,aind,mind]
             
@@ -635,7 +635,10 @@ class COCOevalTiny:
             raise Exception('Please run accumulate() first')
         iouType = self.params.iouType
         if iouType == 'segm' or iouType == 'bbox':
-            summarize = _summarizeDets
+            if Params.EVAL_STRANDARD.lower().startswith('tiny'):
+                summarize = _summarizeDets_tiny
+            else:
+                summarize = _summarizeDets
         elif iouType == 'keypoints':
             summarize = _summarizeKps
         self.stats = summarize()

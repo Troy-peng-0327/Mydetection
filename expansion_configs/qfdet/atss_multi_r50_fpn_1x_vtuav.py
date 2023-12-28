@@ -1,5 +1,5 @@
 _base_ = [
-    '../_base_/datasets/rgbtdroneperson.py',
+    '../_base_/datasets/vtuav.py',
     '../_base_/schedules/schedule_1x.py', '../_base_/default_runtime.py'
 ]
 
@@ -8,10 +8,10 @@ model = dict(
     type='ATSSMulti',
     data_preprocessor=dict(
         type='MutliDetDataPreprocessor',
-        mean=[115.37, 121.82, 122.63],
-        std=[85.13, 89.01, 88.27],
-        mean2=[93.10, 93.10, 93.10],
-        std2=[50.24, 50.24, 50.24],
+        mean=[83.20, 92.24, 97.70],
+        std=[57.77, 57.41, 57.69],
+        mean2=[134.84, 134.84, 134.84],
+        std2=[81.58, 81.58, 81.58],
         bgr_to_rgb=True,
         pad_size_divisor=32),
     backbone=dict(

@@ -18,11 +18,13 @@ from .semseg_metric import SemSegMetric
 from .voc_metric import VOCMetric
 from .youtube_vis_metric import YouTubeVISMetric
 from .rgbtdroneperson_metric import RGBTDronePersonMetric
+from .vtuav_metric import VTUAVMetric
 
 __all__ = [
     'CityScapesMetric', 'CocoMetric', 'CocoPanopticMetric', 'OpenImagesMetric',
     'VOCMetric', 'LVISMetric', 'CrowdHumanMetric', 'DumpProposals',
     'CocoOccludedSeparatedMetric', 'DumpDetResults', 'BaseVideoMetric',
     'MOTChallengeMetric', 'CocoVideoMetric', 'ReIDMetrics', 'YouTubeVISMetric',
-    'COCOCaptionMetric', 'SemSegMetric', 'RefSegMetric', 'RGBTDronePersonMetric'
+    'COCOCaptionMetric', 'SemSegMetric', 'RefSegMetric', 'RGBTDronePersonMetric',
+    'VTUAVMetric'
 ]

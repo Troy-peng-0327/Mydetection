@@ -1,5 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import datetime
 import itertools
 import os.path as osp
 import tempfile
@@ -7,16 +6,12 @@ from collections import OrderedDict
 from typing import Dict, List, Optional, Sequence, Union
 
 import numpy as np
-import torch
-from mmengine.evaluator import BaseMetric
-from mmengine.fileio import dump, get_local_path, load
-from mmengine.logging import MMLogger
+from mmengine.fileio import load
+from mmengine.logging import MMLogger, print_log
 from terminaltables import AsciiTable
 
 from mmdet.datasets.api_wrappers import COCO, COCOeval, COCOevalMP, COCOevalTiny, Params
 from mmdet.registry import METRICS
-from mmdet.structures.mask import encode_mask_results
-from ..functional import eval_recalls
 from .coco_metric import CocoMetric
 
 
@@ -295,6 +290,7 @@ class RGBTDronePersonMetric(CocoMetric):
                     table_data += [result for result in results_2d]
                     table = AsciiTable(table_data)
                     logger.info('\n' + table.table)
+                    print_log('\n' + table.table, logger=logger)
 
                 if metric_items is None:
                     # metric_items = [
